@@ -1,12 +1,17 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
 
 const students = require('./routes/api/students');
-const lectors = require('./routes/api/lectors');
+const lecturers = require('./routes/api/lecturers');
 const profile = require('./routes/api/profile');
 const group = require('./routes/api/group');
 
 const app = express();
+
+// Body parser middleware
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // DB config
 const db = require('./config/keys').mongoURI;
@@ -22,7 +27,7 @@ mongoose
 
 // Use routes
 app.use('/api/students', students);
-app.use('/api/lectors', lectors);
+app.use('/api/lecturers', lecturers);
 app.use('/api/profile', profile);
 app.use('/api/group', group);
 
