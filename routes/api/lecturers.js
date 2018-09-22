@@ -5,6 +5,10 @@ const jwt = require('jsonwebtoken');
 const keys = require('../../config/keys');
 const passport = require('passport');
 
+// Load Input Validation
+const validateLecturerRegisterInput = require('../../validation/register');
+const { validateLecturerLoginInput } = require('../../validation/login');
+
 // Load lecturer model
 const Lecturer = require('../../models/Lecturer');
 
@@ -20,14 +24,20 @@ router.get('/test', (req, res) => {
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
+    const { errors, isValid } = validateLecturerRegisterInput(req.body);
+
+    //Check Validation
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
+
     const lecturer = await Lecturer.findOne({
       email: req.body.email
     });
 
     if (lecturer) {
-      return res.status(400).json({
-        email: 'Toks el.pašto adresas jau yra užregistruotas'
-      });
+      errors.email = 'Toks el.pašto adresas jau yra užregistruotas';
+      return res.status(400).json(errors);
     } else {
       const newLecturer = new Lecturer({
         first_name: req.body.first_name,
@@ -56,6 +66,11 @@ router.post('/register', async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
+    const { errors, isValid } = validateLecturerLoginInput(req.body);
+
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
     const email = req.body.email;
     const password = req.body.password;
 
@@ -64,7 +79,8 @@ router.post('/login', async (req, res) => {
 
     // Check for student
     if (!lecturer) {
-      return res.status(404).json({ email: 'El.pašto adresas nerastas' });
+      errors.email = 'Vartotojas su tokiu el.pašto adresu nerastas';
+      return res.status(404).json(errors);
     }
 
     // Check password
@@ -95,7 +111,8 @@ router.post('/login', async (req, res) => {
         }
       );
     } else {
-      return res.status(400).json({ password: 'Neteisingas slaptažodis' });
+      errors.password = 'Neteisingas slaptažodis';
+      return res.status(400).json(errors);
     }
   } catch (error) {
     console.log(error);

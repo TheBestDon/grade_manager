@@ -6,7 +6,8 @@ const keys = require('../../config/keys');
 const passport = require('passport');
 
 // Load Input Validation
-const validateRegisterInput = require('../../validation/register');
+const { validateStudentRegisterInput } = require('../../validation/register');
+const { validateStudentLoginInput } = require('../../validation/login');
 
 // Load student model
 const Student = require('../../models/Student');
@@ -21,7 +22,7 @@ router.get('/test', (req, res) => res.json({ msg: 'Students Works' }));
 // @access  Public
 router.post('/register', async (req, res) => {
   try {
-    const { errors, isValid } = validateRegisterInput(req.body);
+    const { errors, isValid } = validateStudentRegisterInput(req.body);
 
     //Check Validation
     if (!isValid) {
@@ -33,9 +34,8 @@ router.post('/register', async (req, res) => {
     });
 
     if (student) {
-      return res.status(400).json({
-        student_number: 'Toks studento numeris jau yra užregistruotas'
-      });
+      errors.student_number = 'Toks studento numeris jau yra užregistruotas';
+      return res.status(400).json(errors);
     } else {
       const newStudent = new Student({
         first_name: req.body.first_name,
@@ -63,6 +63,11 @@ router.post('/register', async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
+    const { errors, isValid } = validateStudentLoginInput(req.body);
+
+    if (!isValid) {
+      return res.status(400).json(errors);
+    }
     const student_number = req.body.student_number;
     const password = req.body.password;
 
@@ -71,9 +76,8 @@ router.post('/login', async (req, res) => {
 
     // Check for student
     if (!student) {
-      return res
-        .status(404)
-        .json({ student_number: 'Studentas tokiu numeriu nerastas' });
+      errors.student_number = 'Studentas tokiu numeriu nerastas';
+      return res.status(404).json(errors);
     }
 
     // Check password
@@ -103,7 +107,8 @@ router.post('/login', async (req, res) => {
         }
       );
     } else {
-      return res.status(400).json({ password: 'Neteisingas slaptažodis' });
+      errors.password = 'Neteisingas slaptažodis';
+      return res.status(400).json(errors);
     }
   } catch (error) {
     console.log(error);
